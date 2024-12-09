@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymson Gej-m</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            background-image: url('latwe.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            overflow: hidden;
+            transition: filter 0.5s ease;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 72px;
+            font-weight: bold;
+            background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+            -webkit-background-clip: text;
+            color: transparent;
+            animation: rainbow 3s infinite linear, neonGlow 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rainbow {
+            0% { background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet); }
+            100% { background: linear-gradient(90deg, violet, indigo, blue, green, yellow, orange, red); }
+        }
+
+        @keyframes neonGlow {
+            0% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000, 0 0 20px #ff0000; }
+            50% { text-shadow: 0 0 15px #ff0000, 0 0 20px #ff0000, 0 0 25px #ff0000, 0 0 30px #ff0000; }
+            100% { text-shadow: 0 0 5px #ff0000, 0 0 10px #ff0000, 0 0 15px #ff0000, 0 0 20px #ff0000; }
+        }
+
+        .game-container {
+            display: none;
+        }
+
+        .lives, .score {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        .lives {
+            top: 10px;
+            right: 10px;
+            color: red;
+            text-shadow: 0 0 10px white;
+        }
+
+        .score {
+            top: 10px;
+            left: 10px;
+            color: #7A4C9C;
+            text-shadow: 0 0 15px #7A4C9C, 0 0 20px #7A4C9C;
+        }
+
+        .target {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background-image: url('ymszon.png');
+            background-size: cover;
+            border-radius: 50%;
+            cursor: pointer;
+            animation: fadein 0.5s ease-in-out;
+            box-shadow: 0 0 15px #7A4C9C;
+        }
+
+        .target.flash {
+            animation: flash 0.3s alternate infinite ease-in-out;
+        }
+
+        @keyframes fadein {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes flash {
+            0% { background-color: transparent; }
+            50% { background-color: rgba(255, 255, 0, 0.5); }
+            100% { background-color: transparent; }
+        }
+
+        .game-over-container {
+            display: none;
+            text-align: center;
+            margin-top: 15%;
+        }
+
+        .game-over {
+            font-size: 48px;
+            color: red;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .start-screen {
+            text-align: center;
+            margin-top: 10%;
+        }
+
+        .start-screen button {
+            font-size: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .rules {
+            margin-top: 20px;
+            font-size: 18px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .rules h2 {
+            font-size: 22px;
+        }
+
+        .rules ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .restart-button {
+            font-size: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .highscores-container {
+            position: absolute;
+            top: 20%;
+            left: 10%;
+            font-size: 18px;
+            color: #7A4C9C;
+            font-weight: bold;
+            text-align: left;
+            text-shadow: 0 0 10px #7A4C9C;
+        }
+
+        .highscores-container ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .highscores-container li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+<audio id="game-music" loop>
+    <source src="gra.mp3" type="audio/mpeg">
+</audio>
+
+    <h1>Ymson Gej-m</h1>
+
+    <div class="start-screen">
+        <img src="kazek.png" alt="Kazek" style="width: 150px; display: block; margin: auto;">
+        <input type="text" id="playerName" placeholder="Wpisz swój nick" style="padding: 10px 20px; font-size: 18px; border-radius: 5px;">
+        <button id="start-button">Start</button>
+        <div class="rules">
+            <h2>Zasady gry:</h2>
+            <ul>
+                <li>Kliknij na pojawiający się obiekt, aby go usunąć.</li>
+                <li>Masz 3 życia. Tracisz życie, jeśli nie klikniesz obiektu na czas.</li>
+                <li>Gra kończy się, gdy stracisz wszystkie życia.</li>
+                <li>Poziomy: Każdy poziom ma inną prędkość pojawiania się obiektów.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <div class="lives">Życia: ❤️❤️❤️</div>
+        <div class="score">Wynik: 0</div>
+    </div>
+
+    <div class="game-over-container">
+        <div class="game-over">Przejebałeś! 😭</div>
+        <button class="restart-button" id="restart-button">Restart</button>
+    </div>
+
+    <div class="highscores-container">
+        <h2>Wyniki:</h2>
+        <ul id="highscores-list" style="list-style-type: none; padding: 0;"></ul>
+    </div>
+
+    <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCSk6fZPfKkn_w92zdJuEZIEJOTDEeUGyA",
+        authDomain: "ymson-gej-m.firebaseapp.com",
+        projectId: "ymson-gej-m",
+        storageBucket: "ymson-gej-m.appspot.com",
+        messagingSenderId: "328743724942",
+        appId: "1:328743724942:web:23f3e177f049015bdbe3c3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const startButton = document.getElementById("start-button");
+    const gameContainer = document.querySelector(".game-container");
+    const scoreElement = document.querySelector(".score");
+    const livesElement = document.querySelector(".lives");
+    const gameOverContainer = document.querySelector(".game-over-container");
+    const restartButton = document.getElementById("restart-button");
+    const highscoresList = document.getElementById("highscores-list");
+
+    let score = 0;
+    let lives = 3;
+    let targetInterval;
+    let playerName = "";
+    let target = null;
+
+    const levels = [
+        { limit: 20, time: 1850, bg: 'latwe.png' },
+        { limit: 45, time: 1500, bg: 'srednie.png' },
+        { limit: 75, time: 1200, bg: 'trudne.png' },
+        { limit: 9999, time: 850, bg: 'trudniejsze.png' }
+    ];
+
+    let currentLevelIndex = 0;
+    const gameMusic = document.getElementById("game-music");
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // Sprawdzamy, czy przycisk jest dostępny
+        if (!startButton) {
+            console.error("Nie znaleziono przycisku start!");
+            return;
+        }
+
+        startButton.addEventListener("click", function () {
+            const playerNameInput = document.getElementById("playerName").value.trim();
+
+            if (playerNameInput === "") {
+                alert("Podaj swój nick!");
+                return;
+            }
+            playerName = playerNameInput;  // Przypisujemy nazwę gracza
+            gameMusic.play(); // Rozpocznij odtwarzanie muzyki
+            startGame(); // Uruchamiamy grę
+        });
+    });
+
+    function startGame() {
+        gameContainer.style.display = "block";
+        document.querySelector(".start-screen").style.display = "none";
+        score = 0;
+        lives = 3;
+        updateLives();
+        updateScore();
+        loadHighscores();
+        targetInterval = setInterval(createTarget, levels[currentLevelIndex].time);
+    }
+
+    function updateLives() {
+        livesElement.textContent = `Życia: ${"❤️".repeat(lives)}`;
+    }
+
+    function updateScore() {
+        scoreElement.textContent = `Wynik: ${score}`;
+    }
+
+    function loseLife() {
+        lives--;
+        updateLives();
+        if (lives === 0) {
+            gameOver();
+        }
+
+        const loseLifeSound = document.getElementById("stracenie-sound");
+        loseLifeSound.play();
+    }
+
+    function gameOver() {
+        clearInterval(targetInterval);
+        saveScore();
+        gameContainer.style.display = "none";
+        gameOverContainer.style.display = "block";
+    }
+
+    restartButton.addEventListener("click", restartGame);
+
+    function restartGame() {
+        gameOverContainer.style.display = "none";
+        document.querySelector(".start-screen").style.display = "block";
+    }
+
+    function saveScore() {
+        const playerRef = doc(db, "highscores", playerName);
+
+        getDoc(playerRef).then((docSnap) => {
+            if (docSnap.exists()) {
+                const previousHighscore = docSnap.data().score;
+                if (score > previousHighscore) {
+                    setDoc(playerRef, { score: score }, { merge: true })
+                        .then(() => {
+                            console.log("Nowy highscore zapisany");
+                            loadHighscores();
+                        })
+                        .catch((error) => {
+                            console.error("Błąd przy zapisywaniu wyniku", error);
+                        });
+                } else {
+                    console.log("Nowy wynik nie jest wyższy, nie zapisano");
+                }
+            } else {
+                setDoc(playerRef, { score: score })
+                    .then(() => {
+                        console.log("Nowy highscore zapisany");
+                        loadHighscores();
+                    })
+                    .catch((error) => {
+                        console.error("Błąd przy zapisywaniu wyniku", error);
+                    });
+            }
+        });
+    }
+
+    function loadHighscores() {
+        getDocs(collection(db, "highscores"))
+            .then(snapshot => {
+                let highscores = [];
+                snapshot.forEach(doc => {
+                    highscores.push({ name: doc.id, score: doc.data().score });
+                });
+
+                highscores.sort((a, b) => b.score - a.score);
+
+                highscoresList.innerHTML = "";
+                highscores.slice(0, 10).forEach((entry) => {
+                    const li = document.createElement("li");
+                    li.textContent = `${entry.name}: ${entry.score}`;
+                    highscoresList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error("Błąd przy ładowaniu wyników", error);
+            });
+    }
+
+    function createTarget() {
+        if (target) {
+            target.remove();
+            loseLife();
+        }
+
+        const size = 50;
+        const maxX = window.innerWidth - size - 20;
+        const maxY = window.innerHeight - size - 70;
+
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
+
+        target = document.createElement("div");
+        target.classList.add("target");
+        target.style.left = `${x}px`;
+        target.style.top = `${y}px`;
+        target.addEventListener("click", () => {
+            score++;
+            updateScore();
+            target.remove();
+            target = null;
+            updateLevel();
+
+            const clickSound = document.getElementById("click-sound");
+            clickSound.play();
+        });
+
+        gameContainer.appendChild(target);
+    }
+
+    function updateLevel() {
+        if (score >= levels[currentLevelIndex].limit) {
+            currentLevelIndex++;
+            document.body.style.backgroundImage = `url('${levels[currentLevelIndex].bg}')`;
+            clearInterval(targetInterval);
+            targetInterval = setInterval(createTarget, levels[currentLevelIndex].time);
+        }
+    }
+</script>
+
+</body>
+</html>
